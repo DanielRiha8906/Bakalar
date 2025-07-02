@@ -1,3 +1,4 @@
+import base64
 from langchain.tools import tool
 import uuid
 import requests
@@ -13,17 +14,20 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-def call_mcp(method, params):
+def call_mcp(tool_name, arguments):
     body = {
         "jsonrpc": "2.0",
         "id": str(uuid.uuid4()),
-        "method": method,
-        "params": params
+        "method": "tools/call",
+        "params": {
+            "name": tool_name,
+            "arguments": arguments
+        }
     }
 
     print("\n=== MCP REQUEST ===")
-    print("Method:", method)
-    print("Params:", params)
+    print("Tool:", tool_name)
+    print("Arguments:", arguments)
     print("===================\n")
 
     response = requests.post(MCP_URL, json=body, headers=HEADERS)
@@ -45,7 +49,6 @@ class GetFileInput(BaseModel):
     path: str
     branch: str
 
-import base64
 
 @tool
 def get_file(input: str) -> str:
@@ -53,11 +56,11 @@ def get_file(input: str) -> str:
     Get a file's content from a GitHub repo.
     Input format: 'owner/repo|path|branch'
     """
-    import base64
     try:
         repository, path, branch = input.split("|")
         owner, repo = repository.split("/")
-        result = call_mcp("repos.get_file_content", {
+
+        result = call_mcp("get_file_contents", {
             "owner": owner,
             "repo": repo,
             "path": path,
@@ -68,12 +71,14 @@ def get_file(input: str) -> str:
         print(result)
         print("==================\n")
 
-        encoded_content = result.get("result", {}).get("content")
-        if encoded_content:
-            return base64.b64decode(encoded_content).decode("utf-8")
-        return "Error: Content missing or empty."
+        content_arr = result.get("result", {}).get("content", [])
+        if content_arr and isinstance(content_arr, list):
+            text_b64 = content_arr[0].get("text", "")
+            return base64.b64decode(text_b64).decode("utf-8")
+        return "Error: Content missing or improperly formatted."
     except Exception as e:
         return f"Error: {str(e)}"
+
 
 
 class WriteFileInput(BaseModel):
@@ -92,14 +97,35 @@ def write_file(input: str) -> str:
         repository, path, branch, content = input.split("|", 3)
         owner, repo = repository.split("/")
         encoded_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
-        call_mcp("repos.write_file", {
+
+        sha = ""
+        try:
+            get_result = call_mcp("get_file_contents", {
+                "owner": owner,
+                "repo": repo,
+                "path": path,
+                "ref": branch
+            })
+            text_b64 = get_result.get("result", {}).get("content", [])[0].get("text", "")
+            decoded = base64.b64decode(text_b64).decode("utf-8")
+            sha = get_result.get("result", {}).get("sha", "")
+        except Exception:
+            pass 
+
+        payload = {
             "owner": owner,
             "repo": repo,
             "path": path,
             "content": encoded_content,
-            "branch": branch,
-            "commit_message": f"Agent auto-update: {path}"
-        })
-        return "File updated."
+            "message": f"Agent auto-update: {path}",
+            "branch": branch
+        }
+
+        if sha:
+            payload["sha"] = sha
+
+        result = call_mcp("create_or_update_file", payload)
+
+        return "File written successfully."
     except Exception as e:
         return f"Error: {str(e)}"
