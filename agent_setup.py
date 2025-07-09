@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from mcp_tools import  call_mcp, get_file, write_file
+from mcp_tools import  get_file, write_file, get_me, create_repository, create_branch, delete_file, get_file_contents, push_files, search_repositories, list_commits, get_commit, list_branches
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import TextLoader
@@ -26,31 +26,26 @@ role_retriever = role_vectorstore.as_retriever()
 retrieved_role_docs = role_retriever.get_relevant_documents("What is the agent's role?")
 role_prompt_text = "\n".join([doc.page_content for doc in retrieved_role_docs])
 
-
-code_loader = TextLoader("docs/code_context.txt")
-code_documents = code_loader.load()
-code_chunks = text_splitter.split_documents(code_documents)
-code_vectorstore = FAISS.from_documents(code_chunks, embeddings)
-code_retriever = code_vectorstore.as_retriever()
-
 history = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
-tools = [get_file, write_file]
+tools = [get_file_contents, create_branch, create_repository, get_me, get_file, write_file, delete_file, push_files, search_repositories, list_commits, get_commit, list_branches]
+
 prompt = ChatPromptTemplate.from_messages([
     SystemMessagePromptTemplate.from_template(role_prompt_text),
-    HumanMessagePromptTemplate.from_template("{input}")
+    HumanMessagePromptTemplate.from_template("{input}"),
 ])
+
 
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
 agent = initialize_agent(
     tools=tools,
     llm=llm,
-    agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-    agent_kwargs={"prompt": prompt},
+    agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+    agent_kwargs={"input_variables": ["input", "chat_history"]},
     verbose=True,
-    handle_parsing_errors=True,
-    memory=history
+    memory=history,
+    handle_parsing_errors=True
 )
 
 
@@ -60,6 +55,9 @@ while True:
     user_input = input("\nYou: ")
     if user_input.lower() in ("exit", "quit"):
         break
+
     result = agent.invoke({"input": user_input})
+    print("\n-----------------------AGENT RESPONSE -----------------------")
+    print(result)
 
 print(history.buffer)
