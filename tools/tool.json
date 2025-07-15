@@ -1,0 +1,60 @@
+{
+  "tools": {
+    "repository_management": [
+      "get_file_contents",
+      "create_repository",
+      "create_branch",
+      "delete_file",
+      "push_files",
+      "create_or_update_file",
+      "list_branches",
+      "list_commits",
+      "get_commit",
+      "get_tag",
+      "list_tags"
+    ],
+    "issues": [
+      "search_issues",
+      "create_issue",
+      "get_issue",
+      "get_issue_comments",
+      "add_issue_comment",
+      "update_issue",
+      "list_issues"
+    ],
+    "pull_requests": [
+      "search_pull_requests",
+      "list_pull_requests",
+      "create_pull_request",
+      "get_pull_request",
+      "get_pull_request_diff",
+      "get_pull_request_files",
+      "get_pull_request_reviews",
+      "update_pull_request",
+      "merge_pull_request",
+      "create_pending_pull_request_review",
+      "add_pull_request_review_comment_to_pending_review",
+      "delete_pending_pull_request_review",
+      "submit_pending_pull_request_review",
+      "create_and_submit_pull_request_review",
+      "get_pull_request_status"
+    ],
+    "user": [
+      "get_me",
+      "search_users",
+      "list_notifications",
+      "dismiss_notification"
+    ],
+    "workflows": [
+      "run_workflow",
+      "rerun_workflow_run",
+      "cancel_workflow_run",
+      "get_workflow_run:logs",
+      "list_workflow_runs",
+      "get_workflow_run_usage"
+    ],
+    "search": [
+      "search_repositories"
+    ]
+  }
+}
