@@ -10,10 +10,11 @@ def search_repositories_tool(input: str) -> str:
     """
     try:
         query = f"user:{input}"
+        query = query.strip("`'\" \n\r\t")
         payload = {"query": query}
-
-        result = call_mcp("search_repositories", payload)
         
+        result = call_mcp("search_repositories", payload)
+       
         if isinstance(result, str):
             return f"Unexpected response: {result}"
 

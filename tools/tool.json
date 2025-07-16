@@ -11,7 +11,8 @@
       "list_commits",
       "get_commit",
       "get_tag",
-      "list_tags"
+      "list_tags",
+      "search_repositories"
     ],
     "issues": [
       "search_issues",
@@ -52,9 +53,6 @@
       "get_workflow_run:logs",
       "list_workflow_runs",
       "get_workflow_run_usage"
-    ],
-    "search": [
-      "search_repositories"
     ]
   }
 }

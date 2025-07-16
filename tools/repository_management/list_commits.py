@@ -5,7 +5,7 @@ import json
 @tool("list_commits")
 def list_commits_tool(input: str) -> str:
     """
-    List commits in a GitHub repository.
+    List all commits in a GitHub repository.
     Input format: 'owner/repo|branch'
     Example: 'DanielRiha8906/Test-MCP|main'
     """
@@ -43,9 +43,9 @@ def list_commits_tool(input: str) -> str:
                 for c in parsed:
                     sha = c.get("sha", "")
                     msg = c.get("commit", {}).get("message", "").strip().splitlines()[0]
-                    sha_list.append(f"{sha} :: {msg}")
-
+                    sha_list.append(f"{sha} - {msg}")
                 return "\n".join(sha_list)
+            
             except Exception as e:
                 return f"Error parsing commit JSON: {e}"
 

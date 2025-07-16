@@ -7,14 +7,24 @@ def write_file_tool(input: str) -> str:
     """
     Write or update a file in a GitHub repo using MCP.
     Input format: 'owner/repo|path|branch|content'
+    Example: 'DanielRiha8906/testicek|app.py|main|print("Hello World")'
     """
     try:
-        repository, path, branch, content = input.split("|", 3)
+        parts = input.split("|", 3)
+        if len(parts) != 4:
+            return "Error: Invalid input. Format: 'owner/repo|path|branch|content'"
+
+        #forgot to clean input whoops
+        repository = parts[0].strip().strip("'\"")
+        path = parts[1].strip()
+        branch = parts[2].strip()
+        content = parts[3].strip().encode("utf-8").decode("unicode_escape")
+
+
         if "/" not in repository:
             return "Error: Repository must be in format 'owner/repo'"
-        owner, repo = repository.split("/")
-        
-        # Get latest SHA from GitHub (not MCP!)
+        owner, repo = [s.strip().replace("’", "").replace("‘", "").replace("'", "") for s in repository.split("/")]
+
         sha, _ = get_github_sha_and_content(owner, repo, path, branch)
 
         payload = {
@@ -31,6 +41,7 @@ def write_file_tool(input: str) -> str:
         result = call_mcp("create_or_update_file", payload)
         if "error" in result:
             return f"Write failed: {result['error']}"
-        return "File written successfully."
+        return f"File '{path}' written successfully to branch '{branch}' in '{owner}/{repo}'."
+
     except Exception as e:
         return f"Exception during write_file: {str(e)}"

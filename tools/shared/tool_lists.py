@@ -8,6 +8,23 @@ def return_all_implemented_tools():
         update_issue_tool,
         get_issue_comments_tool,
     )
+    from tools.pull_requests import (
+    search_pull_requests_tool,
+    list_pull_requests_tool,
+    create_pull_request_tool,
+    get_pull_request_tool,
+    get_pull_request_diff_tool,
+    get_pull_request_files_tool,
+    get_pull_request_reviews_tool,
+    update_pull_request_tool,
+    merge_pull_request_tool,
+    create_pending_pull_request_review_tool,
+    add_pull_request_review_comment_to_pending_review_tool,
+    delete_pending_pull_request_review_tool,
+    submit_pending_pull_request_review_tool,
+    create_and_submit_pull_request_review_tool,
+    get_pull_request_status_tool,
+    )
 
     from tools.repository_management import (
         get_file_contents_tool,
@@ -51,4 +68,19 @@ def return_all_implemented_tools():
         list_branches_tool,
         search_issues_tool,
         get_issue_comments_tool,
+        search_pull_requests_tool,
+        list_pull_requests_tool,
+        create_pull_request_tool,
+        get_pull_request_tool,
+        get_pull_request_diff_tool,
+        get_pull_request_files_tool,
+        get_pull_request_reviews_tool,
+        update_pull_request_tool,
+        merge_pull_request_tool,
+        create_pending_pull_request_review_tool,
+        add_pull_request_review_comment_to_pending_review_tool,
+        delete_pending_pull_request_review_tool,
+        submit_pending_pull_request_review_tool,
+        create_and_submit_pull_request_review_tool,
+        get_pull_request_status_tool,
     ]

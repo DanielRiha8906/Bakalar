@@ -16,7 +16,11 @@ def push_files_tool(input: str) -> str:
     try:
         repo_info, branch, message, files_blob = input.split("|", 3)
         owner, repo = repo_info.split("/")
-
+        owner = owner.strip("`'\" \n\r\t")
+        repo = repo.strip("`'\" \n\r\t")
+        branch = branch.strip("`'\" \n\r\t")
+        message = message.strip("`'\" \n\r\t")
+        files_blob = files_blob.strip("`'\" \n\r\t")
         files_raw = files_blob.split("###")
         files = []
         for f in files_raw:
