@@ -26,7 +26,10 @@ def write_file_tool(input: str) -> str:
         owner, repo = [s.strip().replace("’", "").replace("‘", "").replace("'", "") for s in repository.split("/")]
 
         sha, _ = get_github_sha_and_content(owner, repo, path, branch)
-
+        if content[-1] == "'":
+            content = content[:-1]
+        if content.endswith("```"):
+            content = content[:-3]
         payload = {
             "owner": owner,
             "repo": repo,

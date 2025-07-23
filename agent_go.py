@@ -7,7 +7,6 @@ from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.agents import initialize_agent, AgentType
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
-from langchain.tools import tool
 from langchain.memory import ConversationBufferMemory
 
 
