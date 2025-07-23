@@ -9,6 +9,7 @@ def search_pull_requests_tool(input: str) -> str:
     Example: 'is:open is:pr author:DanielRiha8906|DanielRiha8906|Test-MCP|created|desc|1|5'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) < 1:
             return "Error: Invalid input. Format: 'query|[owner]|[repo]|[sort]|[order]|[page]|[perPage]'"

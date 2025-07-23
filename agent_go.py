@@ -15,7 +15,7 @@ load_dotenv()
 role_loader = TextLoader("docs/agent_role.txt")
 role_documents = role_loader.load()
 
-text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+text_splitter = CharacterTextSplitter(chunk_size=600, chunk_overlap=50)
 role_chunks = text_splitter.split_documents(role_documents)
 
 embeddings = OpenAIEmbeddings()

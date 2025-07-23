@@ -17,7 +17,8 @@ def list_issues_tool(input: str) -> str:
     'DanielRiha8906/testicek'
     """
     try:
-        parts = input.strip().replace("\n", "").replace("\r", "").strip("`'\" ").split("|")
+        input = input.strip("`'\" \n\r\t")
+        parts = input.split("|")
 
         if len(parts) < 1:
             return "Invalid input. Format: 'owner/repo|[filters]'"

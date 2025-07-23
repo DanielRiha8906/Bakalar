@@ -10,6 +10,7 @@ def create_and_submit_pull_request_review_tool(input: str) -> str:
     Example: 'DanielRiha8906/Test-MCP|3|APPROVE|abc123def456|Looks great!'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) < 4:
             return ("Error: Invalid input. Format: 'owner/repo|pull_number|event|commit_sha|[body]'")

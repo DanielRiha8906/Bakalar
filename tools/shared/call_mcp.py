@@ -45,6 +45,16 @@ def call_mcp(tool_name: str, arguments: dict):
     print("[MCP RESPONSE]", response_line.strip())
 
     try:
-        return json.loads(response_line)
+        result = json.loads(response_line)
+
+        if "error" in result:
+            raise Exception(f"MCP JSON-RPC error: {json.dumps(result['error'])}")
+
+        mcp_result = result.get("result", {})
+        if mcp_result.get("isError"):
+            raise Exception(f"MCP call failed: {json.dumps(mcp_result.get('content', ''))}")
+
+        return result
+
     except json.JSONDecodeError as e:
         raise Exception(f"Invalid JSON response: {e}\nRaw line: {response_line.strip()}")

@@ -10,7 +10,7 @@ from .push_files import *
 from .search_repositories import *
 from .create_or_update_file import write_file_tool
 
-__all__ = ["create_branch_tool", 
+__all__ = ["create_branch", 
            "create_repository_tool", 
            "delete_file_tool", 
            "get_commit_tool", 

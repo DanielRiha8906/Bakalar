@@ -10,6 +10,7 @@ def submit_pending_pull_request_review_tool(input: str) -> str:
     Example: 'DanielRiha8906/Test-MCP|3|APPROVE|Looks good to me!'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) < 3:
             return "Error: Invalid input. Format: 'owner/repo|pull_number|event|[body]'"

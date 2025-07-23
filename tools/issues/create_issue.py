@@ -16,11 +16,12 @@ def create_issue_tool(input: str) -> str:
     The issue will be created without assignees, labels, or milestone.
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) < 3:
             return "Invalid input. Expected format: 'owner/repo|title|body'"
 
-        owner_repo = parts[0].strip().strip("`'\" ")
+        owner_repo = parts[0].strip()
         title = parts[1].strip()
         body = "|".join(parts[2:]).strip()
         owner, repo = owner_repo.split("/", 1)

@@ -5,10 +5,11 @@ from langchain.tools import tool
 def list_pull_requests_tool(input: str) -> str:
     """
     List pull requests in a GitHub repository using MCP.
-    Input format: 'owner/repo|[state]|[base]|[head]|[sort]|[direction]|[page]|[perPage]'
+    Input format: owner/repo|[state]|[base]|[head]|[sort]|[direction]|[page]|[perPage]
     Example: 'DanielRiha8906/Test-MCP|open|main|||desc|1|10'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) < 1:
             return "Error: Invalid input. Format: 'owner/repo|[state]|[base]|[head]|[sort]|[direction]|[page]|[perPage]'"

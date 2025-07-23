@@ -9,6 +9,7 @@ def update_pull_request_tool(input: str) -> str:
     Example: 'DanielRiha8906/Test-MCP|3|New title|Updated PR body|main|open|true'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) < 2:
             return "Error: Invalid input. Format: 'owner/repo|pull_number|[title]|[body]|[base]|[state]|[maintainer_can_modify]'"

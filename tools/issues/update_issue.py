@@ -16,6 +16,7 @@ def update_issue_tool(input: str) -> str:
     'DanielRiha8906/testicek|1|title=New title;body=Updated description;state=closed;labels=bug,urgent'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.strip().split("|")
         if len(parts) < 3:
             return "Invalid input. Format: 'owner/repo|issue_number|field=value;...'"

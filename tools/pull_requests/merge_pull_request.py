@@ -9,6 +9,7 @@ def merge_pull_request_tool(input: str) -> str:
     Example: 'DanielRiha8906/Test-MCP|3|squash|Merge feature X|Squashed feature branch into main'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) < 2:
             return "Error: Invalid input. Format: 'owner/repo|pull_number|[merge_method]|[commit_title]|[commit_message]'"

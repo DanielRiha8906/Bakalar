@@ -14,7 +14,8 @@ def add_issue_comment_tool(input: str) -> str:
     'DanielRiha8906/testicek|1|Thanks for the update, looks good!'
     """
     try:
-        parts = input.strip().split("|")
+        input = input.strip("`'\" \n\r\t")
+        parts = input.split("|")
         if len(parts) < 3:
             return "Invalid input. Format: 'owner/repo|issue_number|comment_body'"
 

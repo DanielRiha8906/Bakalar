@@ -14,6 +14,7 @@ def search_issues_tool(input: str) -> str:
     'is:open|DanielRiha8906/testicek'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.strip().split("|")
         if len(parts) < 2:
             return "Invalid input. Format: 'query|owner/repo'"
@@ -43,10 +44,11 @@ def search_issues_tool(input: str) -> str:
         if not issues:
             return "No issues found."
 
-        return "\n".join(
-            f"#{issue['number']}: {issue['title']} — {issue['html_url']}"
-            for issue in issues[:5]
-        )
+        output = "\n".join(
+        f"#{issue['number']}: {issue['title']} — {issue['html_url']}"
+        for issue in issues[:5])
+
+        return json.dumps(output)
 
     except Exception as e:
         return f"Exception in search_issues: {str(e)}"

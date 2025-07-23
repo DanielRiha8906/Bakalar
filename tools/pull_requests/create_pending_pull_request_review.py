@@ -6,12 +6,14 @@ def create_pending_pull_request_review_tool(input: str) -> str:
     """
     Create a pending review for a pull request using MCP.
     Input format: 'owner/repo|pull_number|commit_sha'
-    Example: 'DanielRiha8906/Test-MCP|3|abc123def456...'
+    Example: 'DanielRiha8906/Test-MCP|3|62bc48ae6676d74953bd2ea5c5300daccb72e68b'
     """
+
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) != 3:
-            return "Error: Invalid input. Format: 'owner/repo|pull_number|commit_sha'"
+            return "Error: Invalid input. Format: owner/repo|pull_number|commit_sha"
 
         owner, repo = parts[0].split("/")
         pull_number = int(parts[1])

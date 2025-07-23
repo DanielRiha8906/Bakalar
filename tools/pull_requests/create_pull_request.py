@@ -9,6 +9,7 @@ def create_pull_request_tool(input: str) -> str:
     Example: 'DanielRiha8906/Test-MCP|Add feature X|feature-x|main|Implements feature X|true'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.split("|")
         if len(parts) < 4:
             return "Error: Invalid input. Format: 'owner/repo|title|head_branch|base_branch|[body]|[draft]'"

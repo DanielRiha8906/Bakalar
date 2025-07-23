@@ -14,6 +14,7 @@ def get_issue_comments_tool(input: str) -> str:
     'DanielRiha8906/testicek|1'
     """
     try:
+        input = input.strip("`'\" \n\r\t")
         parts = input.strip().split("|")
         if len(parts) != 2:
             return "Invalid input. Expected format: 'owner/repo|issue_number'"
