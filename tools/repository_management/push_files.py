@@ -1,43 +1,32 @@
 from ..shared.call_mcp import call_mcp
 from langchain_core.tools import tool
-
+from typing import List, Dict
 
 @tool("push_multiple_files")
-def push_files_tool(input: str) -> str:
+def push_files_tool(owner: str, repo: str, branch: str, files: List[Dict[str, str]], message: str) -> str:
     """
     Push multiple files to a GitHub repository using MCP.
-    Input format: 'owner/repo|branch|message|[path1]:::<content1>###path2:::<content2>###...'
-    Delimiters:
-        - Use '###' to separate multiple files
-        - Use ':::' to separate file path and its content
+    
+    Args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        branch: The branch to push the files to.
+        files: A list of dictionaries containing file paths and their content.
+        message: The commit message for the file push.
+    Returns:
+        A message indicating success or failure.
+    Raises:
+        Exception: If there is an error during the file push operation.
     Example:
-        'DanielRiha8906/Test-MCP|main|Initial commit|README.md:::Hello World!###src/main.py:::print("Hello")'
+        'owner="DanielRiha8906", repo="testicek", branch="main", message="Update files", files=[{"path": "file1.txt", "content": "Content of file 1"}, {"path": "file2.txt", "content": "Content of file 2"}]'
     """
     try:
-        repo_info, branch, message, files_blob = input.split("|", 3)
-        owner, repo = repo_info.split("/")
-        owner = owner.strip("`'\" \n\r\t")
-        repo = repo.strip("`'\" \n\r\t")
-        branch = branch.strip("`'\" \n\r\t")
-        message = message.strip("`'\" \n\r\t")
-        files_blob = files_blob.strip("`'\" \n\r\t")
-        files_raw = files_blob.split("###")
-        files = []
-        for f in files_raw:
-            if ":::" not in f:
-                return f"Error: Invalid file entry '{f}'. Expected format: path:::content"
-            path, content = f.split(":::", 1)
-            files.append({
-                "path": path.strip(),
-                "content": content
-            })
-
         payload = {
             "owner": owner,
             "repo": repo,
             "branch": branch,
-            "message": message,
-            "files": files
+            "files": files,
+            "message": message
         }
 
         result = call_mcp("push_files", payload)
@@ -45,7 +34,5 @@ def push_files_tool(input: str) -> str:
             return f"Push failed: {result['error']}"
         return f"Successfully pushed {len(files)} file(s) to {owner}/{repo}@{branch}."
 
-    except ValueError:
-        return "Error: Input must contain exactly four parts separated by '|'"
     except Exception as e:
         return f"Exception during push_files: {str(e)}"

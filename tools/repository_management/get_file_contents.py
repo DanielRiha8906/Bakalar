@@ -1,58 +1,41 @@
-from typing import Union
+from typing import Union, Optional
 import json
 from ..shared.call_mcp import call_mcp
 from langchain_core.tools import tool
 
 @tool("get_file_contents")
-def get_file_contents_tool(input: str) -> Union[str, list]:
+def get_file_contents_tool(owner: str, repo: str, path: str, ref: Optional[str] = None) -> Union[str, list]:
     """
     List files and directories at a specific path in a GitHub repository using MCP.
-    Input format: 'owner/repo|branch|[path]'
-    Example (root): 'DanielRiha8906/testicek|main|'
-    Example (subdir): 'DanielRiha8906/testicek|main|src/'
+    Args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        path: The path to the directory or file in the repository.
+        ref: The branch or commit SHA to list files from (optional).
+    Returns:
+        A list of file paths if the path is a directory, or the content of the file if the path is a file.
+    Raises:
+        Exception: If there is an error during the file retrieval operation.
+    Example (root directory):
+    'owner="DanielRiha8906", repo="testicek", path="", ref="main"'
+
+    Example (subdirectory):
+    'owner="DanielRiha8906", repo="testicek", path="src/", ref="main"'
     """
     try:
-        # Parse and clean parts
-        parts = input.strip().strip("'\"").split("|")
-        
-
-        repository = parts[0].strip()
-        branch = parts[1].strip()
-        
-        raw_path = parts[2].strip() if len(parts) > 2 else ""
-        path = raw_path.strip("`'\" \n\r\t")
-        if path in ("", ".", "./"):
-            path = "/"
-
-        if "/" not in repository:
-            return "Error: Repository must be in format 'owner/repo'"
-
-        # Sanitize owner/repo
-        owner, repo = [
-            part.strip().replace("’", "").replace("‘", "").replace("'", "").replace("`", "")
-            for part in repository.split("/")
-        ]
-
-        # Prepare payload for GitHub MCP
         payload = {
             "owner": owner,
             "repo": repo,
             "path": path,
-            "ref": f"refs/heads/{branch}" if branch else "",
+            "ref": ref
         }
-
-        print("\n=== MCP CHAGNE THIS YOU WANKER PAYLOAD ===")
-        print(json.dumps(payload, indent=2))
-        print("======================================")
+        payload = {key: value for key, value in payload.items() if value is not None}
 
         result = call_mcp("get_file_contents", payload)
 
-        print("\n=== MCP get_file_contents RESPONSE ===")
-        print(json.dumps(result, indent=2))
-        print("======================================\n")
-
         if "error" in result:
-            return f"Failed to fetch file list: {result['error']}"
+            return f"Failed to fetch file list: {result['error'].get('message', str(result['error']))}"
+
 
         content = result.get("result", {}).get("content", [])
         if isinstance(content, list) and content and isinstance(content[0], dict) and "text" in content[0]:
@@ -62,9 +45,9 @@ def get_file_contents_tool(input: str) -> Union[str, list]:
                 return f"Invalid JSON in response: {content[0]['text']}"
 
             if isinstance(parsed, list):
-                return [entry.get("path", "unknown") for entry in parsed]
+                return [entry["path"] for entry in parsed if "path" in entry]
             elif isinstance(parsed, dict) and parsed.get("type") == "file":
-                return [parsed.get("path", "unknown")]
+                return parsed.get("content", "[no content]")
             else:
                 return f"Unexpected parsed content format: {parsed}"
 

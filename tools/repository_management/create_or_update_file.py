@@ -26,7 +26,7 @@ def write_file_tool(owner: str, repo: str, path: str, branch: str, content: str,
             "repo": repo,
             "path": path,
             "content": content,
-            "message": f"Agent auto-update: {path}",
+            "message": message,
             "branch": branch
         }
         if sha:

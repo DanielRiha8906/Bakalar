@@ -3,30 +3,21 @@ from langchain.tools import tool
 import json
 
 @tool("get_issue_comments")
-def get_issue_comments_tool(input: str) -> str:
+def get_issue_comments_tool(owner: str, repo: str, issue_number: int) -> str:
     """
     Get comments for a specific issue in a GitHub repository.
 
-    Input format:
-    'owner/repo|issue_number'
+
+    args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        issue_number: The number of the issue to retrieve comments for.
 
     Example:
     'DanielRiha8906/testicek|1'
+
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.strip().split("|")
-        if len(parts) != 2:
-            return "Invalid input. Expected format: 'owner/repo|issue_number'"
-
-        owner_repo = parts[0].strip()
-        issue_number = parts[1].strip()
-
-        if "/" not in owner_repo:
-            return "Invalid owner/repo format. Expected 'owner/repo'."
-
-        owner, repo = owner_repo.split("/", 1)
-
         payload = {
             "owner": owner,
             "repo": repo,

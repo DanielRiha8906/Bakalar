@@ -1,26 +1,34 @@
 from ..shared.call_mcp import call_mcp
 from langchain_core.tools import tool
 import json
+from typing import Optional
 
 @tool("get_commit_details")
-def get_commit_tool(input: str) -> str:
+def get_commit_tool(owner: str, repo: str, sha: str, page: Optional[int] = 10, perPage: Optional[int] = 1) -> str:
     """
     Get all details of a specific commit.
     Input format: 'owner/repo|commit_sha'
+    args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        sha: The SHA of the commit to retrieve.
+        page: The page number for pagination (default is 10).
+        perPage: Number of commits per page (default is 1).
+
     Example: 'DanielRiha8906/NUM|0a67897f767ed0bc9d34b6988392d699f381f03f'
     """
     try:
-        repo_info, sha = input.split("|")
-        sha = sha.strip("`'\" \n\r\t")
-        owner, repo = repo_info.split("/")
-        owner = owner.strip("`'\" \n\r\t")
-        repo = repo.strip("`'\" \n\r\t")
-        payload = {"owner": owner, "repo": repo, "sha": sha}
+        payload = {"owner": owner,
+                   "repo": repo,
+                   "sha": sha,
+                   "page": page,
+                   "perPage": perPage}
+        payload = {key: value for key, value in payload.items() if value is not None}
 
         result = call_mcp("get_commit", payload)
 
         if "error" in result:
-            return f"Error: {result['error']}"
+            return f"Get commit failed: {result['error'].get('message', str(result['error']))}"
 
         text = result["result"]["content"][0]["text"]
         data = json.loads(text)
@@ -30,7 +38,6 @@ def get_commit_tool(input: str) -> str:
         author = commit.get("author", {}).get("name", "Unknown")
         date = commit.get("author", {}).get("date", "Unknown")
 
-        # Process file changes
         file_changes = []
         for file in data.get("files", []):
             fname = file.get("filename", "unknown")

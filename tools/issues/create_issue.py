@@ -3,29 +3,23 @@ from langchain.tools import tool
 import json
 
 @tool("create_issue")
-def create_issue_tool(input: str) -> str:
+def create_issue_tool(owner: str, repo: str, title:str, body:str) -> str:
     """
     Create a new issue in a GitHub repository.
 
-    Input format:
-    'owner/repo|title|body'
-
+    args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        title: The title of the issue.
+        body: The body of the issue.
+    
     Example:
     'DanielRiha8906/NUM|Bug in login|Clicking login throws an error.'
 
+    
     The issue will be created without assignees, labels, or milestone.
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.split("|")
-        if len(parts) < 3:
-            return "Invalid input. Expected format: 'owner/repo|title|body'"
-
-        owner_repo = parts[0].strip()
-        title = parts[1].strip()
-        body = "|".join(parts[2:]).strip()
-        owner, repo = owner_repo.split("/", 1)
-
         payload = {
             "owner": owner,
             "repo": repo,

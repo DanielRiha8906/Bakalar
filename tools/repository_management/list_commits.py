@@ -1,31 +1,42 @@
 from ..shared.call_mcp import call_mcp
 from langchain_core.tools import tool
 import json
+from typing import Optional
 
 @tool("list_commits")
-def list_commits_tool(input: str) -> str:
+def list_commits_tool(owner: str, repo: str, sha: Optional[str] = None, author: Optional[str] = None, perPage: Optional[int] = 10, page: Optional[int] = 1) -> str:
     """
     List all commits in a GitHub repository.
-    Input format: 'owner/repo|branch'
-    Example: 'DanielRiha8906/Test-MCP|main'
+
+    Args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        sha: The SHA of the commit to retrieve (optional).
+        author: The author of the commits to filter by (optional).
+        perPage: Number of commits to return per page (default is 10).
+        page: Page number for pagination (default is 1).
+
+    Example:
+        owner: "DanielRiha8906", repo: "testicek", sha: "main", author: "DanielRiha8906", perPage: 5, page: 1
     """
     try:
-        repo_info, branch = input.strip().split("|")
-        owner, repo = repo_info.strip().strip("'").strip('"').split("/")
-        branch = branch.strip().strip("'").strip('"').replace("\n", "").replace("\n", "")
-
-
         payload = {
-        "owner": owner.strip().strip("'\"`"),
-        "repo": repo.strip().strip("'\"`"),
-        "sha": branch.strip().strip("'\"`")
+        "owner": owner,
+        "repo": repo,
+        "sha": sha,
+        "author": author,
+        "perPage": perPage,
+        "page": page
         }
+
+        payload = {key: value for key, value in payload.items() if value is not None}
 
         result = call_mcp("list_commits", payload)
 
         #Error in call_mcp
         if "error" in result:
-            return f"Commit list failed: {result['error']}"
+            return f"Commit list failed: {result['error'].get('message', str(result['error']))}"
+
 
         # Error in Json
         if result.get("result", {}).get("isError"):
@@ -40,10 +51,13 @@ def list_commits_tool(input: str) -> str:
             try:
                 parsed = json.loads(content[0]["text"])
                 sha_list = []
-                for c in parsed:
-                    sha = c.get("sha", "")
-                    msg = c.get("commit", {}).get("message", "").strip().splitlines()[0]
-                    sha_list.append(f"{sha} - {msg}")
+                for commit in parsed:
+                    author = commit.get("commit", {}).get("author", {}).get("name", "unknown")
+                    date = commit.get("commit", {}).get("author", {}).get("date", "unknown")
+                    commit_sha = commit.get("sha", "")
+                    msg = commit.get("commit", {}).get("message", "").strip().splitlines()[0]
+                    sha_list.append(f"{commit_sha} - {msg}")
+
                 return "\n".join(sha_list)
             
             except Exception as e:

@@ -2,29 +2,33 @@ from ..shared.call_mcp import call_mcp
 from langchain_core.tools import tool
 import json
 import re
+from typing import Optional
 
 @tool("list_branches")
-def list_branches_tool(input: str) -> str:
+def list_branches_tool(owner: str, repo: str, perPage: Optional[int] = 10, page: Optional[int] = 1 ) -> str:
     """
     List all branches in a GitHub repository using MCP.
-    Input format: 'owner/repo'
+    
+    Args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        perPage: Number of branches to return per page (default is 10).
+        page: Page number for pagination (default is 1).
+    
+    Returns:
+        A string listing all branches in the format:
+    
     Example: 'DanielRiha8906/testicek'
     """
     try:
-        # new day, new regex
-        cleaned_input = input.strip()
-        cleaned_input = re.sub(r"[`\"\n\r]", "", cleaned_input)
-        cleaned_input = re.sub(r"\s*\|\|.*", "", cleaned_input)
-        cleaned_input = cleaned_input.replace("’", "").replace("‘", "").replace("'", "")
-
-        if "/" not in cleaned_input:
-            return "Error: Input must be in format 'owner/repo'"
-        owner, repo = [part.strip() for part in cleaned_input.split("/", 1)]
-
         payload = {
             "owner": owner,
-            "repo": repo
+            "repo": repo,
+            "perPage": perPage,
+            "page": page
         }
+
+        payload = {key: value for key, value in payload.items() if value is not None}
 
         result = call_mcp("list_branches", payload)
 

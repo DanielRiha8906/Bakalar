@@ -1,29 +1,22 @@
 import json
 from langchain.tools import tool
 from ..shared.call_mcp import call_mcp
+from typing import Optional
 
 @tool("create_branch")
-def create_branch_tool(input: str) -> str:
+def create_branch_tool(owner: str, repo: str, branch: str, from_branch: Optional[str] = None) -> str:
     """
     Create a new branch in a GitHub repository using MCP.
-    Input format: 'owner/repo|new_branch|from_branch'
+
+    Args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        branch: The name of the new branch to create.
+        from_branch: The branch to base the new branch on (default is "main").
+    
     Example: 'DanielRiha8906/Test-MCP|feature-branch|main'
     """
     try:
-        repo_info = [part.strip().replace("’", "").replace("‘", "").replace("'", "") for part in input.split("|")]
-        if len(repo_info) < 2:
-            return "Error: Invalid input. Format: 'owner/repo|new_branch|from_branch'"
-
-        owner_repo = repo_info[0].split("/")
-        if len(owner_repo) != 2:
-            return "Error: Invalid repo format. Use 'owner/repo'."
-
-        owner, repo = owner_repo[0].strip(), owner_repo[1].strip()
-        branch = repo_info[1]
-        raw_from_branch = repo_info[2] if len(repo_info) > 2 else "main"
-
-        from_branch = raw_from_branch.strip("`'\" \n\r\t")
-
         payload = {
             "owner": owner,
             "repo": repo,

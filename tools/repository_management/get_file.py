@@ -9,13 +9,7 @@ def get_github_sha_and_content(owner, repo, path, branch):
         "Authorization": f"Bearer {os.getenv('GITHUB_OAUTH_TOKEN')}",
         "Accept": "application/vnd.github.v3+json"
     }
-
-    print("===== DEBUG: GitHub API File Request =====")
-    print(f"URL: {url}")
-    print(f"Owner: {owner}, Repo: {repo}, Path: {path}, Branch: {branch}")
-    print(f"Headers: {headers}")
-    print("==========================================")
-
+    print(f"Fetching file from URL: {url}")
     try:
         response = requests.get(url, headers=headers)
         print(f"Response status: {response.status_code}")
@@ -48,20 +42,25 @@ def get_github_sha_and_content(owner, repo, path, branch):
 file_cache = {}
 
 @tool("get_file")
-def get_file_tool(input: str) -> str:
+def get_file_tool(owner: str, repo: str, path: str, branch: str) -> str:
     """
     Get a file's content from a GitHub repo.
-    Input format: 'owner/repo|path|branch'
+    args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        path: The path to the file in the repository.
+        branch: The branch to get the file from.
+    Returns:
+        The content of the file or an error message.
+    Raises:
+        Exception: If there is an error during the file retrieval operation.
+    Example:
+        'owner="DanielRiha8906", repo="testicek", path="src/main.py", branch="main"'
     """
     try:
-        print(f"get_file_tool input: {input}")
-        repository, path, branch = input.split("|")
-        owner, repo = repository.split("/")
-        owner = owner.strip("`'\" \n\r\t")
-        repo = repo.strip("`'\" \n\r\t")
-        path = path.strip("`'\" \n\r\t")
-        branch = branch.strip().strip("`'\" \n\r\t")
-
+        if not path.strip():
+            return "Error: Path cannot be empty."
+        
         sha, content = get_github_sha_and_content(owner, repo, path.strip(), branch.strip())
 
         cache_key = f"{owner}/{repo}/{path}"

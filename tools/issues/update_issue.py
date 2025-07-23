@@ -1,58 +1,51 @@
 from ..shared.call_mcp import call_mcp
 from langchain.tools import tool
 import json
+from typing import Optional
 
 @tool("update_issue")
-def update_issue_tool(input: str) -> str:
+def update_issue_tool(
+    owner: str,
+    repo: str,
+    issue_number: int,
+    title: Optional[str] = None,
+    body: Optional[str] = None,
+    assignees: Optional[str] = None,
+    labels: Optional[str] = None,
+    milestone: Optional[int] = None,
+    state: Optional[str] = None
+) -> str:
     """
     Update an existing issue in a GitHub repository.
 
-    Input format:
-    'owner/repo|issue_number|field=value;field=value;...'
-
-    Supported fields: title, body, state (open/closed), assignees (comma-separated), labels (comma-separated)
+    Args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        issue_number: The number of the issue to update.
+        title: New title for the issue (optional).
+        body: New body for the issue (optional).
+        assignees: Comma-separated list of assignees (optional).
+        labels: Comma-separated list of labels (optional).
+        milestone: New milestone number (optional).
+        state: New state for the issue ("open" or "closed", optional).
 
     Example:
-    'DanielRiha8906/testicek|1|title=New title;body=Updated description;state=closed;labels=bug,urgent'
+        DanielRiha8906/testicek|1|title=New title;body=Updated description;state=closed;labels=bug,urgent
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.strip().split("|")
-        if len(parts) < 3:
-            return "Invalid input. Format: 'owner/repo|issue_number|field=value;...'"
-
-        owner_repo = parts[0].strip().strip("`'\"")
-        issue_number = int(parts[1].strip().strip("`'\""))
-        field_data = parts[2].strip()
-
-        if "/" not in owner_repo:
-            return "Invalid owner/repo format. Expected 'owner/repo'."
-
-        owner, repo = owner_repo.split("/", 1)
-
-        updates = {}
-        for pair in field_data.split(";"):
-            if "=" not in pair:
-                continue
-            key, value = pair.split("=", 1)
-            key = key.strip()
-            value = value.strip()
-
-            if key == "assignees":
-                updates[key] = [x.strip() for x in value.split(",") if x.strip()]
-            elif key == "labels":
-                updates[key] = [x.strip() for x in value.split(",") if x.strip()]
-            elif key == "issue_number":
-                continue  # ignore
-            else:
-                updates[key] = value
-
         payload = {
             "owner": owner,
             "repo": repo,
             "issue_number": issue_number,
-            **updates
+            "title": title,
+            "body": body,
+            "assignees": assignees.split(",") if assignees else None,
+            "labels": labels.split(",") if labels else None,
+            "milestone": milestone,
+            "state": state
         }
+
+        payload = {key: value for key, value in payload.items() if value is not None}
 
         result = call_mcp("update_issue", payload)
 

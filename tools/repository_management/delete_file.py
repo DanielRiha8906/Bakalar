@@ -3,23 +3,23 @@ from langchain_core.tools import tool
 from .get_file import get_github_sha_and_content
 
 @tool("delete_file")
-def delete_file_tool(input: str) -> str:
+def delete_file_tool(owner: str, repo: str, path: str, message: str, branch: str) -> str:
     """
     Delete a file from a GitHub repository using MCP.
-    Input format: 'owner/repo|path|branch|message'
-    Example: 'DanielRiha8906/Test-MCP|README.md|main|Removing obsolete README'
+    args:
+        owner: The owner of the repository.
+        repo: The name of the repository.
+        path: The path to the file in the repository.
+        message: The commit message for the file deletion.
+        branch: The branch to delete the file from.
+    Returns:
+        A message indicating success or failure.
+    Raises:
+        Exception: If there is an error during the file deletion operation.
+    Example:
+        'DanielRiha8906/testicek|path/to/file.txt|Delete file| Update file content|main'
     """
     try:
-        parts = input.split("|")
-        if len(parts) != 4:
-            return "Error: Invalid input. Expected format is 'owner/repo|path|branch|message'"
-
-        owner_repo, path, branch, message = parts
-        owner_repo = owner_repo.strip().strip("'").strip('"')
-        if "/" not in owner_repo:
-            return "Error: owner/repo must be specified like 'DanielRiha8906/testicek'"
-        owner, repo = owner_repo.split("/")
-
         sha, _ = get_github_sha_and_content(owner, repo, path, branch)
         if not sha:
             return f"Error: Could not retrieve SHA for '{path}' in '{owner}/{repo}@{branch}'"
@@ -35,7 +35,8 @@ def delete_file_tool(input: str) -> str:
 
         result = call_mcp("delete_file", payload)
         if "error" in result:
-            return f"File deletion failed: {result['error']}"
+            return f"File deletion failed: {result['error'].get('message', str(result['error']))}"
+
         return f"File '{path}' deleted from branch '{branch}' in '{owner}/{repo}'."
 
     except Exception as e:

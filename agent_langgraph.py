@@ -33,7 +33,7 @@ def agent(state: AgentState) -> AgentState:
 
     else:
         user_input = input("\n User:")
-        print(f"\n👤 USER: {user_input}")
+        print(f"\n USER: {user_input}")
         user_message = HumanMessage(content=user_input)
 
     all_messages = [System_prompt] + state["messages"] + [user_message] # type: ignore

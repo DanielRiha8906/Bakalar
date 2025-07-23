@@ -3,13 +3,29 @@ import json
 from langchain.tools import tool
 
 @tool("list_issues")
-def list_issues_tool(input: str) -> str:
+def list_issues_tool(
+    owner: str,
+    repo: str,
+    direction: str = "desc",
+    labels: list[str] = [],
+    perPage: int = 30,
+    page: int = 1,
+    sort: str = "created",
+    state: str = "open"
+) -> str:
     """
     List issues in a GitHub repository.
 
-    Input format:
-    'owner/repo|[state=open|closed|all]|[labels=label1,label2]'
-
+    args:
+        owner (str): Repository owner
+        repo (str): Repository name
+        direction (str): Sort direction ("asc" or "desc")
+        labels (list[str]): Filter by labels
+        perPage (int): Results per page (min 1, max 100)
+        page (int): Page number for pagination (min 1)
+        sort (str): Sort by field ("created", "updated", "comments")
+        state (str): Filter by issue state ("open", "closed", "all")
+    
     Example:
     'DanielRiha8906/testicek|state=open|labels=bug,urgent'
 
@@ -17,35 +33,16 @@ def list_issues_tool(input: str) -> str:
     'DanielRiha8906/testicek'
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.split("|")
-
-        if len(parts) < 1:
-            return "Invalid input. Format: 'owner/repo|[filters]'"
-
-        owner_repo = parts[0].strip().strip("`'\"")
-        if "/" not in owner_repo:
-            return "Invalid owner/repo format. Expected 'owner/repo'."
-        owner, repo = owner_repo.split("/", 1)
-
         payload = {
-            "owner": owner,
-            "repo": repo,
-            "perPage": 10,  # default page size
-            "page": 1       # always first page unless expanded later
+        "owner": owner,
+        "repo": repo,
+        "direction": direction,
+        "labels": labels,
+        "perPage": perPage,
+        "page": page,
+        "sort": sort,
+        "state": state
         }
-
-        for part in parts[1:]:
-            if "=" not in part:
-                continue
-            key, value = part.split("=", 1)
-            key = key.strip()
-            value = value.strip()
-
-            if key == "labels":
-                payload[key] = [label.strip() for label in value.split(",")]
-            elif key in ["state", "sort", "direction"]:
-                payload[key] = value
 
         result = call_mcp("list_issues", payload)
 
@@ -59,7 +56,7 @@ def list_issues_tool(input: str) -> str:
             return "No issues found."
 
         return "\n".join(
-            f"#{issue['number']}: {issue['title']} ({issue['state']}) — {issue['html_url']}"
+            f"{issue['number']}: {issue['title']} ({issue['state']}) — {issue['html_url']}"
             for issue in issues[:10]
         )
 

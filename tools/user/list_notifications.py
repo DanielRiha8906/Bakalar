@@ -1,44 +1,46 @@
 from ..shared.call_mcp import call_mcp
 from langchain_core.tools import tool
 import json
+from typing import Optional
 
 @tool("list_notifications")
-def list_notifications_tool(input: str = "") -> str:
+def list_notifications_tool(
+    owner: Optional[str] = None,
+    repo: Optional[str] = None,
+    page: Optional[int] = 1,
+    perPage: Optional[int] = 10,
+    filter: Optional[str] = "default",
+    since: Optional[str] = None,
+    before: Optional[str] = None
+) -> str:
     """
     List GitHub notifications for the authenticated user.
-
-    Optional input format:
-    'filter=default;owner=DanielRiha8906;repo=NSQL_tweeter;since=2025-07-01;before=2025-07-15;page=1;perPage=5
-'
-
-    Available filters:
-    - filter: default | include_read_notifications | only_participating
-    - owner and repo (together): to filter notifications by repo
-    - since / before: ISO 8601 timestamps
-    - page, perPage: pagination options
+    Args:
+        owner: The owner of the repository (optional).
+        repo: The name of the repository (optional).
+        page: Page number for pagination (default is 1).
+        perPage: Number of notifications to return per page (default is 10).
+        filter: Filter for notifications (default is "default").
+        since: Only show notifications updated after this time (optional).
+        before: Only show notifications updated before this time (optional).
+    Example:
+        'owner=DanielRiha8906;repo=testicek;filter=include_read_notifications;since=2023-01-01;before=2023-12-31;page=1;perPage=10'
+    Returns:
+        A string listing notifications in the format:
+        "repo: subject — reason (updated at time)"
     """
     try:
-        cleaned_input = input.strip().replace("\n", "").replace("\r", "").strip("`'\" ")
-        payload = {}
+        payload = {
+            "owner": owner,
+            "repo": repo,
+            "page": page,
+            "perPage": perPage,
+            "filter": filter,
+            "since": since,
+            "before": before
+        }
 
-        if cleaned_input:
-            entries = cleaned_input.split(";")
-            parts = dict(entry.split("=", 1) for entry in entries if "=" in entry)
-
-            if "filter" in parts:
-                payload["filter"] = parts["filter"].strip()
-            if "owner" in parts:
-                payload["owner"] = parts["owner"].strip()
-            if "repo" in parts:
-                payload["repo"] = parts["repo"].strip()
-            if "since" in parts:
-                payload["since"] = parts["since"].strip()
-            if "before" in parts:
-                payload["before"] = parts["before"].strip()
-            if "page" in parts:
-                payload["page"] = str(int(parts["page"]))
-            if "perPage" in parts:
-                payload["perPage"] = str(int(parts["perPage"]))
+        payload = {key: value for key, value in payload.items() if value is not None}
 
         result = call_mcp("list_notifications", payload)
 
