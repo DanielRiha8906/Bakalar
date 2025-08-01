@@ -1,43 +1,43 @@
 from ..shared.call_mcp import call_mcp
 from langchain.tools import tool
+from typing import Optional
 
 @tool("create_and_submit_pull_request_review")
-def create_and_submit_pull_request_review_tool(input: str) -> str:
+def create_and_submit_pull_request_review_tool(owner: str, repo: str, pullNumber: int, body: str, event: str, commitID: Optional[str] = None) -> str:
     """
     Create and submit a pull request review without comments using MCP.
-    Input format: 'owner/repo|pull_number|event|commit_sha|[body]'
-    - event must be one of: APPROVE, REQUEST_CHANGES, COMMENT
-    Example: 'DanielRiha8906/Test-MCP|3|APPROVE|abc123def456|Looks great!'
+    
+    Args:
+        owner (str): The GitHub username or organization that owns the repository.
+        repo (str): The name of the repository.
+        pullNumber (int): The number of the pull request to review.
+        body (str): The content of the review.
+        event (str): The type of review event. Must be "APPROVE", "REQUEST_CHANGES", or "COMMENT".
+        commitID (str, optional): The commit ID to associate with the review. If not provided, the latest commit will be used.    
+
+    Raises:
+        ValueError: If the event type is not one of the allowed values.
+        Exception: If there is an error during the MCP call.
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.split("|")
-        if len(parts) < 4:
-            return ("Error: Invalid input. Format: 'owner/repo|pull_number|event|commit_sha|[body]'")
-
-        owner, repo = parts[0].split("/")
-        pull_number = int(parts[1])
-        event = parts[2].upper()
-        commit_id = parts[3]
-        body = parts[4] if len(parts) > 4 else ""
-
         if event not in {"APPROVE", "REQUEST_CHANGES", "COMMENT"}:
             return "Error: event must be APPROVE, REQUEST_CHANGES, or COMMENT"
 
         payload = {
             "owner": owner,
             "repo": repo,
-            "pullNumber": pull_number,
+            "pullNumber": pullNumber,
             "event": event,
-            "commitID": commit_id,
+            "commitID": commitID,
             "body": body
         }
-
+        if commitID is not None:
+            payload["commitID"] = commitID
         result = call_mcp("create_and_submit_pull_request_review", payload)
         if "error" in result:
             return f"Failed to create and submit review: {result['error']}"
 
-        return f"Review submitted for PR #{pull_number} in '{owner}/{repo}' with event '{event}'."
+        return f"Review submitted for PR #{pullNumber} in '{owner}/{repo}' with event '{event}'."
 
     except Exception as e:
         return f"Exception during create_and_submit_pull_request_review: {str(e)}"

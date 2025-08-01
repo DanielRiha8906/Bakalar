@@ -1,33 +1,29 @@
 from ..shared.call_mcp import call_mcp
 from langchain.tools import tool
+from typing import Optional
 
 @tool("get_pull_request_files")
-def get_pull_request_files_tool(input: str) -> str:
+def get_pull_request_files_tool(owner: str, repo: str, pullNumber: int, page: Optional[int] = 1, perPage: Optional[int] = 20 ) -> str:
     """
     Get the list of files changed in a specific pull request using MCP.
-    Input format: 'owner/repo|pull_number|[page]|[perPage]'
-    Example: 'DanielRiha8906/Test-MCP|3|1|30'
+    Args:
+        owner (str): The GitHub username or organization that owns the repository.
+        repo (str): The name of the repository.
+        pullNumber (int): The number of the pull request to get the files for.
+        page (int, optional): The page number for pagination. Defaults to 5.
+        perPage (int, optional): The number of files per page. Defaults to 20
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.split("|")
-        if len(parts) < 2:
-            return "Error: Invalid input. Format: 'owner/repo|pull_number|[page]|[perPage]'"
-
-        owner, repo = parts[0].split("/")
-        pull_number = int(parts[1])
-
         payload = {
             "owner": owner,
             "repo": repo,
-            "pullNumber": pull_number
+            "pullNumber": pullNumber
         }
-
-        if len(parts) > 2 and parts[2]:
-            payload["page"] = int(parts[2])
-        if len(parts) > 3 and parts[3]:
-            payload["perPage"] = int(parts[3])
-
+        if page is not None:
+            payload["page"] = page
+        if perPage is not None:
+            payload["perPage"] = perPage
+        
         result = call_mcp("get_pull_request_files", payload)
         if "error" in result:
             return f"Get pull request files failed: {result['error']}"

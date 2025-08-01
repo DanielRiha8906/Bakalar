@@ -1,50 +1,55 @@
 from ..shared.call_mcp import call_mcp
 from langchain.tools import tool
+from typing import Optional
+
 
 @tool("add_pull_request_review_comment_to_pending_review")
-def add_pull_request_review_comment_to_pending_review_tool(input: str) -> str:
+def add_pull_request_review_comment_to_pending_review_tool(owner: str, repo:str, pullNumber: int, path: str, body: str, subjectType: str, line: Optional[int] = None, startline: Optional[int] = None, side: Optional[str] = None, startSide: Optional[str] = None) -> str:
     """
-    Add a comment to the pending pull request review using MCP.
-    Input format: 'owner/repo|pull_number|path|body|subjectType|side|line|[startSide]|[startLine]'
-    Example (single-line): 'DanielRiha8906/Test-MCP|3|src/main.py|Fix this bug|LINE|RIGHT|42'
-    Example (multi-line): 'DanielRiha8906/Test-MCP|3|src/main.py|Refactor this block|LINE|RIGHT|44|RIGHT|40'
+    Add a comment to the latest pending pull request review using MCP.
+
+    This function adds a comment to a file in a pending pull request review.
+    Ensure that a pending review has already been created before calling this.
+
+    Args:
+        owner (str): The GitHub username or organization that owns the repository.
+        repo (str): The name of the repository.
+        pullNumber (int): The number of the pull request to which the comment applies.
+        path (str): The relative path to the file within the repository to comment on.
+        body (str): The content of the review comment.
+        subjectType (str): The level at which the comment is targeted. Must be "FILE" or "LINE".
+        line (int, optional): The line number in the diff that the comment applies to (for single or end line of a multi-line comment).
+        startLine (int, optional): The starting line number for a multi-line comment.
+        side (str, optional): The side of the diff to comment on. Must be "LEFT" (base) or "RIGHT" (head).
+        startSide (str, optional): The starting side of the diff for a multi-line comment. Must be "LEFT" or "RIGHT".
+
+    Raises:
+        ValueError: If required parameters are missing or invalid.
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.split("|")
-        if len(parts) < 7:
-            return ("Error: Invalid input. Format: "
-                    "'owner/repo|pull_number|path|body|subjectType|side|line|[startSide]|[startLine]'")
-
-        owner, repo = parts[0].split("/")
-        pull_number = int(parts[1])
-        path = parts[2]
-        body = parts[3]
-        subject_type = parts[4]  # "LINE" or "FILE"
-        side = parts[5]          # "LEFT" or "RIGHT"
-        line = int(parts[6].strip("` \n\r\t"))
-
+        
         payload = {
             "owner": owner,
             "repo": repo,
-            "pullNumber": pull_number,
+            "pullNumber": pullNumber,
             "path": path,
             "body": body,
-            "subjectType": subject_type,
+            "subjectType": subjectType,
             "side": side,
             "line": line
         }
-
-        if len(parts) > 7 and parts[7]:
-            payload["startSide"] = parts[7]
-        if len(parts) > 8 and parts[8]:
-           payload["startLine"] = int(parts[8].strip("` \n\r\t"))
-
+        if line is not None: 
+            payload["line"] = line
+        if startline is not None:
+            payload["startline"] = startline
+        if startSide is not None:
+            payload["startSide"] = startSide
+        
         result = call_mcp("add_pull_request_review_comment_to_pending_review", payload)
         if "error" in result:
             return f"Failed to add review comment: {result['error']}"
 
-        return f"Review comment added to PR #{pull_number} on {path}:{line}."
+        return f"Review comment added to PR #{pullNumber} on {path}:{line}."
 
     except Exception as e:
         return f"Exception during add_pull_request_review_comment_to_pending_review: {str(e)}"

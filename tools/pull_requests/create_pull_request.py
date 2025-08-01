@@ -1,35 +1,43 @@
 from ..shared.call_mcp import call_mcp
 from langchain.tools import tool
+from typing import Optional
 
 @tool("create_pull_request")
-def create_pull_request_tool(input: str) -> str:
+def create_pull_request_tool(owner: str, repo: str, title: str, head: str, base: str, body: Optional[str] = None, draft: Optional[bool] = False, maintainer_can_modify: Optional[bool] = False ) -> str:
     """
     Create a new pull request in a GitHub repository using MCP.
-    Input format: 'owner/repo|title|head_branch|base_branch|[body]|[draft]'
-    Example: 'DanielRiha8906/Test-MCP|Add feature X|feature-x|main|Implements feature X|true'
+    Args:
+        owner (str): The GitHub username or organization that owns the repository.
+        repo (str): The name of the repository.
+        title (str): The title of the pull request.
+        head (str): The name of the branch where your changes are implemented.
+        base (str): The name of the branch you want the changes pulled into.
+        body (str, optional): The content of the pull request description.
+        draft (bool, optional): If True, creates a draft pull request. Defaults to False.
+        maintainer_can_modify (bool, optional): If True, allows maintainers to modify the pull request. Defaults to False.
+    Example: 'owner = DanielRiha8906', 'repo = Test-MCP', 'title = "New Feature"', 'head = "feature-branch"', 'base = "main"'
+    Raises:
+        ValueError: If required parameters are missing or invalid.
+        Exception: If there is an error during the MCP call.
+    Returns:
+        str: A message indicating the result of the pull request creation.
+    
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.split("|")
-        if len(parts) < 4:
-            return "Error: Invalid input. Format: 'owner/repo|title|head_branch|base_branch|[body]|[draft]'"
-
-        owner, repo = parts[0].split("/")
-        title = parts[1]
-        head = parts[2]
-        base = parts[3]
-        body = parts[4] if len(parts) > 4 else ""
-        draft = parts[5].lower() == "true" if len(parts) > 5 else False
-
         payload = {
             "owner": owner,
             "repo": repo,
             "title": title,
             "head": head,
             "base": base,
-            "body": body,
-            "draft": draft
         }
+        if body is not None:
+            payload["body"] = body
+        if draft is not None and isinstance(draft, bool):
+            payload["draft"] = draft
+
+        if maintainer_can_modify is not None and isinstance(maintainer_can_modify, bool):
+            payload["maintainer_can_modify"] = maintainer_can_modify
 
         result = call_mcp("create_pull_request", payload)
         if "error" in result:

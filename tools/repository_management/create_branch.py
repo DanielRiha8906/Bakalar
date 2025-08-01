@@ -17,6 +17,8 @@ def create_branch_tool(owner: str, repo: str, branch: str, from_branch: Optional
     Example: 'DanielRiha8906/Test-MCP|feature-branch|main'
     """
     try:
+        if from_branch is None:
+            from_branch = "main"
         payload = {
             "owner": owner,
             "repo": repo,

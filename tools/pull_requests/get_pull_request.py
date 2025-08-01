@@ -2,25 +2,22 @@ from ..shared.call_mcp import call_mcp
 from langchain.tools import tool
 
 @tool("get_pull_request")
-def get_pull_request_tool(input: str) -> str:
+def get_pull_request_tool(owner: str, repo: str, pullNumber: int) -> str:
     """
     Get details of a specific pull request from a GitHub repository using MCP.
-    Input format: 'owner/repo|pull_number'
-    Example: 'DanielRiha8906/Test-MCP|3'
+    Args:
+        owner (str): The GitHub username or organization that owns the repository.
+        repo (str): The name of the repository.
+        pullNumber (int): The number of the pull request to get details for.
+    Returns:
+        str: Details of the pull request or an error message if the operation fails.
+    Example: 'owner = DanielRiha8906', 'repo = Test-MCP', 'pullNumber = 3'
     """
     try:
-        input = input.strip("`'\" \n\r\t")
-        parts = input.split("|")
-        if len(parts) != 2:
-            return "Error: Invalid input. Format: 'owner/repo|pull_number'"
-
-        owner, repo = parts[0].split("/")
-        pull_number = int(parts[1])
-
         payload = {
             "owner": owner,
             "repo": repo,
-            "pullNumber": pull_number
+            "pullNumber": pullNumber
         }
 
         result = call_mcp("get_pull_request", payload)
