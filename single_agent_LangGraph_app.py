@@ -1,4 +1,4 @@
-from typing import Annotated, Sequence, TypedDict
+from typing import Annotated, Sequence, TypedDict, Optional
 from dotenv import load_dotenv  
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -8,87 +8,106 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from tools import *
 
-
 load_dotenv()
 
-# This is the global variable to store document content
-document_content = ""
-
-class AgentState(TypedDict):
+class MultiAgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
+    next_step: Optional[str]  # used for routing between agents
 
 toolset = return_all_implemented_tools()
-
 super_agent = ChatOpenAI(model="gpt-4o").bind_tools(toolset)
 
-with open("docs/agent_role.txt", "r") as file:
-    role_prompt_text = file.read().strip()
+def step_router(state: MultiAgentState) -> str:
+    return state.get("next_step") or "end"
 
-def agent(state: AgentState) -> AgentState:
-    System_prompt = SystemMessage(content = role_prompt_text)
-    
-    if not state["messages"]:
-        user_input = "Please help me automate my software evolution process via tools."
-        user_message = HumanMessage(content=user_input)
+def client_node(state: MultiAgentState) -> MultiAgentState:
+    issue = input("\nUser: Describe the issue to solve: ")
+    return {
+        "messages": [HumanMessage(content=issue)],
+        "next_step": "analyst"
+    }
 
-    else:
-        user_input = input("\n User:")
-        print(f"\n USER: {user_input}")
-        user_message = HumanMessage(content=user_input)
+def analyst_agent(state: MultiAgentState) -> MultiAgentState:
+    print("[ANALYST] Processing issue...")
+    system_msg = SystemMessage(content="You are an Analyst. Extract structured technical requirements from the user input.")
+    recent = list(state["messages"])[-5:]
+    response = super_agent.invoke([system_msg] + recent)
+    state["messages"] = list(state["messages"]) + [response]
+    state["next_step"] = "architect"
+    return state
 
-    all_messages = [System_prompt] + state["messages"] + [user_message] # type: ignore
+def architect_agent(state: MultiAgentState) -> MultiAgentState:
+    print("[ARCHITECT] Finding affected components...")
+    system_msg = SystemMessage(content="You are an Architect. Based on the requirements, identify affected code areas and define tasks for the programmer.")
+    recent = list(state["messages"])[-5:]
+    response = super_agent.invoke([system_msg] + recent)
+    state["messages"] = list(state["messages"]) + [response]
+    state["next_step"] = "programmer"
+    return state
 
-    response = super_agent.invoke(all_messages)
+def programmer_agent(state: MultiAgentState) -> MultiAgentState:
+    print("[PROGRAMMER] Writing code change...")
+    system_msg = SystemMessage(content="You are a Programmer. Write the code required to implement the architectural tasks.")
+    recent = list(state["messages"])[-5:]
+    response = super_agent.invoke([system_msg] + recent)
+    state["messages"] = list(state["messages"]) + [response]
+    state["next_step"] = "tester"
+    return state
 
-    print(f"\n AI: {response.content}")
-    if hasattr(response, "tool_calls") and response.tool_calls:
-        print(f" USING TOOLS: {[tc['name'] for tc in response.tool_calls]}")
+def tester_agent(state: MultiAgentState) -> MultiAgentState:
+    print("[TESTER] Running tests...")
+    system_msg = SystemMessage(content="You are a Tester. Write and run tests to validate the implementation. If tests fail, return it to the programmer.")
+    recent = list(state["messages"])[-5:]
+    response = super_agent.invoke([system_msg] + recent)
+    state["messages"] = list(state["messages"]) + [response]
+    state["next_step"] = "end"  # You could make this dynamic later
+    return state
 
-    return {"messages": list(state["messages"]) + [user_message, response]}
+graph = StateGraph(MultiAgentState)
 
-def should_continue(state: AgentState) -> str:
-    """  Check if the agent should continue or end based on the last AI message."""
-    last_msg = state["messages"][-1]
-    if isinstance(last_msg, AIMessage) and last_msg.additional_kwargs.get("finished") is True:
-        return "end"
-    return "continue"
+# Nodes
+graph.add_node("client", client_node)
+graph.add_node("analyst", analyst_agent)
+graph.add_node("architect", architect_agent)
+graph.add_node("programmer", programmer_agent)
+graph.add_node("tester", tester_agent)
+graph.add_node("done", lambda state: state)
 
-def print_messages(messages):
-    """Function I made to print the messages in a more readable format"""
-    if not messages:
-        return
-    
-    for message in messages[-3:]:
-        if isinstance(message, ToolMessage):
-            print(f"\n TOOL RESULT: {message.content}")
+tool_node = ToolNode(toolset)
+graph.add_node("tools", tool_node)
 
-graph = StateGraph(AgentState)
-graph.add_node("agent", agent)
-graph.add_node("tools", ToolNode(toolset))
+# Entry
+graph.set_entry_point("client")
 
-graph.set_entry_point("agent")
-graph.add_edge("agent", "tools")
+graph.add_conditional_edges("client", step_router, {"analyst": "analyst"})
+graph.add_edge("analyst", "tools")
+graph.add_edge("architect", "tools")
+graph.add_edge("programmer", "tools")
+graph.add_edge("tester", "tools")
 
-graph.add_conditional_edges(
-    "tools",
-    should_continue,
-    {
-        "continue": "agent",
-        "end": END,
-    },
-)
+graph.add_conditional_edges("tools", step_router, {
+    "client": "client",
+    "architect": "architect",
+    "programmer": "programmer",
+    "tester": "tester",
+    "end": "done"
+})
 
 app = graph.compile()
 
 def run_agent():
-    print("Start the app")
-    state = {"messages": []}
+    print("\n=== STARTING MULTI-AGENT WORKFLOW ===")
+    state: MultiAgentState = {
+        "messages": [],
+        "next_step": None
+    }
 
     for step in app.stream(state, stream_mode="values"):
         if "messages" in step:
-            print_messages(step["messages"])
-    
-    print("\n ===== DRAFTER FINISHED =====")
+            for m in step["messages"][-2:]:
+                print(f"[{type(m).__name__}] {m.content}")
+
+    print("\n=== WORKFLOW COMPLETE ===")
 
 if __name__ == "__main__":
     run_agent()

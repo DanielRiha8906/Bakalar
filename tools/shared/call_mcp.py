@@ -1,20 +1,8 @@
-import requests
-import uuid
-import json
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-HEADERS = {
-    "Authorization": f"Bearer {os.getenv('GITHUB_OAUTH_TOKEN')}",
-    "Content-Type": "application/json"
-}
-
 def call_mcp(tool_name: str, arguments: dict):
     import subprocess
     import uuid
     import json
+    import os
 
     body = {
         "jsonrpc": "2.0",
@@ -26,19 +14,33 @@ def call_mcp(tool_name: str, arguments: dict):
         }
     }
 
+    env = os.environ.copy()
+    token = os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN", "")
+    env["GITHUB_PERSONAL_ACCESS_TOKEN"] = token
+
+    print("\n=== DEBUG: CALLING MCP ===")
+    print("Tool name:", tool_name)
+    print("Arguments:", json.dumps(arguments, indent=2))
+    print("GITHUB_TOKEN (first 8 chars):", token[:8] + "..." if token else "[MISSING]")
+    print("===========================\n")
+
     proc = subprocess.Popen(
         ["go", "run", "cmd/github-mcp-server/main.go", "stdio", "--toolsets=all"],
         cwd="/home/aerceas/Documents/baka/github-mcp-server",
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True
+        text=True,
+        env=env
     )
 
     banner = proc.stderr.readline()
     print("[MCP BANNER]", banner.strip())
 
-    proc.stdin.write(json.dumps(body) + "\n")
+    input_payload = json.dumps(body)
+    print("[MCP SEND]", input_payload)
+
+    proc.stdin.write(input_payload + "\n")
     proc.stdin.flush()
 
     response_line = proc.stdout.readline()
