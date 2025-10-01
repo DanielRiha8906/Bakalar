@@ -6,16 +6,20 @@ from langchain.tools import tool
 def get_github_sha_and_content(owner, repo, path, branch):
     url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}"
     headers = {
-        "Authorization": f"Bearer {os.getenv('GITHUB_OAUTH_TOKEN')}",
+        "Authorization": f"Bearer {os.getenv('GITHUB_PERSONAL_ACCESS_TOKEN')}",
         "Accept": "application/vnd.github.v3+json"
     }
     print(f"Fetching file from URL: {url}")
+    ## DEBUG
+    a = os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
+    print(a[:8])
     try:
         response = requests.get(url, headers=headers)
         print(f"Response status: {response.status_code}")
 
         if response.status_code == 200:
             data = response.json()
+            print(os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN"))
             print(f"Response keys: {list(data.keys())}")
             print(f"File SHA: {data.get('sha')}")
             print(f"Content snippet (base64): {data.get('content', '')[:30]}...")
