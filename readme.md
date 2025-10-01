@@ -1,10 +1,14 @@
 # Bakalářská práce 
 
 ## Setup 
-Ve složce src je potřeba si vytvořit .env file, ve kterým musí být tyto proměnné -> \n
-OPENAI_API_KEY = API klíč k OpenAI \n
-GITHUB_PERSONAL_ACCESS_TOKEN = Tady je potřeba vytvořit Personal Access Token - Tokens (classic) \n
-github_mcp_server_location = Místo, kde na lokálním počítači je uložen github-mcp-server \n
+Ve složce src je potřeba si vytvořit .env file, ve kterým musí být tyto proměnné ->
+
+
+OPENAI_API_KEY = API klíč k OpenAI 
+
+GITHUB_PERSONAL_ACCESS_TOKEN = Tady je potřeba vytvořit Personal Access Token - Tokens (classic)
+
+github_mcp_server_location = Místo, kde na lokálním počítači je uložen github-mcp-server 
 
 
 ### příklad:
@@ -14,7 +18,9 @@ GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxx
 github_mcp_server_location=/home/docs/github-mcp-server
 ```
 
+
 Poté je potřeba si stáhnout requirements:
+
 
 ### Postup pro windows: 
 ```
@@ -22,6 +28,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
+
 
 ### Postup pro Linux:
 ```
