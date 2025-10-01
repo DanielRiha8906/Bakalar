@@ -12,12 +12,14 @@ import os
 
 load_dotenv()
 
-LOG_DIR = "src/logs"
+## logging setup
+
+LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, "waterfall_model_log.txt")
 
 def label_for_message(msg: BaseMessage, step_agent: Optional[str]) -> str:
-        # infer agent for each message for accurate logs
+        # agent for each message for accurate logs
         if isinstance(msg, ToolMessage):
             return "tools"
         if isinstance(msg, HumanMessage):
@@ -30,15 +32,13 @@ def append_log(log: str):
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(f"[{time_stamp}]: {log}\n")
 
-
-
-
-
+#Settting up state
 class MultiAgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
     next_step: Optional[str]  # used for routing between agents
     agent: Optional[str]  # current agent name - for logging/debugging
 
+## Helped functions for tools calling bugs
 def _recent(state: MultiAgentState, k: int = 40) -> list[BaseMessage]:
     msgs = list(state.get("messages", []))
     if not msgs:
@@ -106,7 +106,7 @@ def _sanitize_for_openai(system_msg: SystemMessage, recent: list[BaseMessage], f
     return prompt + cleaned
 
 
-
+#Every agent has all tools
 toolset = return_all_implemented_tools()
 super_agent = ChatOpenAI(model="gpt-4o-mini").bind_tools(toolset)
 
@@ -226,7 +226,7 @@ def tester_agent(state: MultiAgentState) -> MultiAgentState:
 
 graph = StateGraph(MultiAgentState)
 
-# Nodes
+# Creating nodes and edges
 graph.add_node("client", client_node)
 graph.add_node("analyst", analyst_agent)
 graph.add_node("architect", architect_agent)

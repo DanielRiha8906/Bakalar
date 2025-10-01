@@ -21,7 +21,7 @@ def add_issue_comment_tool(owner: str, repo: str, issue_number: str, comment_bod
         payload = {
             "owner": owner,
             "repo": repo,
-            "issue_number": str(issue_number),
+            "issue_number": float(issue_number),
             "body": comment_body
         }
 
